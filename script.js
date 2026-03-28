@@ -1,49 +1,33 @@
-const nav = document.querySelector(".nav");
+﻿const nav = document.querySelector(".site-nav");
 const menuToggle = document.querySelector(".menu-toggle");
-const navLinks = document.querySelectorAll(".nav a");
-const header = document.querySelector(".header");
+const navLinks = document.querySelectorAll(".site-nav a");
+const header = document.querySelector(".site-header");
 const yearElement = document.getElementById("year");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const fallbackImageMarkup = `
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#f7e7df"/>
-      <stop offset="100%" stop-color="#edd4dc"/>
-    </linearGradient>
-  </defs>
-  <rect width="1200" height="1500" fill="url(#bg)"/>
-  <circle cx="220" cy="220" r="90" fill="#9b4f68" opacity="0.36"/>
-  <circle cx="980" cy="1260" r="120" fill="#9b4f68" opacity="0.32"/>
-  <text x="50%" y="48%" text-anchor="middle" fill="#5d2f40" font-size="62" font-family="Arial, sans-serif" font-weight="700">
-    Salao da Kau
-  </text>
-  <text x="50%" y="54%" text-anchor="middle" fill="#5d2f40" font-size="36" font-family="Arial, sans-serif">
-    Imagem em atualizacao
-  </text>
-</svg>`;
-const fallbackImageDataUri = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(fallbackImageMarkup)}`;
-
 if (yearElement) {
-  yearElement.textContent = new Date().getFullYear();
+  yearElement.textContent = String(new Date().getFullYear());
 }
+
+const closeMobileMenu = () => {
+  if (!nav || !menuToggle) {
+    return;
+  }
+
+  nav.classList.remove("open");
+  menuToggle.setAttribute("aria-expanded", "false");
+};
 
 if (menuToggle && nav) {
   menuToggle.addEventListener("click", () => {
     const isExpanded = menuToggle.getAttribute("aria-expanded") === "true";
-    menuToggle.setAttribute("aria-expanded", String(!isExpanded));
     nav.classList.toggle("open");
+    menuToggle.setAttribute("aria-expanded", String(!isExpanded));
   });
 }
 
 navLinks.forEach((link) => {
-  link.addEventListener("click", () => {
-    if (nav?.classList.contains("open")) {
-      nav.classList.remove("open");
-      menuToggle?.setAttribute("aria-expanded", "false");
-    }
-  });
+  link.addEventListener("click", closeMobileMenu);
 });
 
 document.addEventListener("click", (event) => {
@@ -60,8 +44,13 @@ document.addEventListener("click", (event) => {
   const clickedToggle = menuToggle.contains(target);
 
   if (!clickedInsideNav && !clickedToggle && nav.classList.contains("open")) {
-    nav.classList.remove("open");
-    menuToggle.setAttribute("aria-expanded", "false");
+    closeMobileMenu();
+  }
+});
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth >= 960) {
+    closeMobileMenu();
   }
 });
 
@@ -69,66 +58,57 @@ const updateHeaderState = () => {
   if (!header) {
     return;
   }
-  header.classList.toggle("scrolled", window.scrollY > 8);
+
+  header.classList.toggle("is-scrolled", window.scrollY > 10);
 };
 
 updateHeaderState();
 window.addEventListener("scroll", updateHeaderState, { passive: true });
 
-const revealSoftTargets = document.querySelectorAll(
-  ".proof-card, .service-card, .diff-card, .gallery-item, .testimonial-card, .location-info, .map-wrap, .final-cta-content"
-);
-revealSoftTargets.forEach((target) => target.classList.add("reveal-soft"));
+// Adds staggered reveal animation to key cards and sections.
+const revealItemSelectors = [
+  ".proof-card",
+  ".service-card",
+  ".experience-card",
+  ".gallery-item",
+  ".testimonial-card",
+  ".location-card",
+  ".map-card",
+  ".final-cta-content"
+];
 
-const revealTargets = document.querySelectorAll(".reveal, .reveal-soft");
+revealItemSelectors.forEach((selector) => {
+  document.querySelectorAll(selector).forEach((item) => item.classList.add("reveal-item"));
+});
+
+const revealTargets = document.querySelectorAll(".reveal, .reveal-item");
+
 if (prefersReducedMotion || typeof IntersectionObserver === "undefined") {
-  revealTargets.forEach((target) => target.classList.add("is-visible"));
+  revealTargets.forEach((element) => element.classList.add("is-visible"));
 } else {
   const revealObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          revealObserver.unobserve(entry.target);
+        if (!entry.isIntersecting) {
+          return;
         }
+
+        entry.target.classList.add("is-visible");
+        revealObserver.unobserve(entry.target);
       });
     },
-    { threshold: 0.12 }
+    {
+      threshold: 0.14,
+      rootMargin: "0px 0px -8% 0px"
+    }
   );
 
   revealTargets.forEach((target, index) => {
-    const delay = Math.min(index * 55, 420);
+    const delay = Math.min(index * 45, 420);
     target.style.setProperty("--reveal-delay", `${delay}ms`);
     revealObserver.observe(target);
   });
 }
-
-const applyImageFallback = (imageElement) => {
-  if (!(imageElement instanceof HTMLImageElement)) {
-    return;
-  }
-
-  const fallbackSrc = imageElement.dataset.fallbackSrc;
-  const fallbackTried = imageElement.dataset.fallbackTried === "true";
-  const placeholderSet = imageElement.dataset.placeholderSet === "true";
-
-  if (fallbackSrc && !fallbackTried) {
-    imageElement.dataset.fallbackTried = "true";
-    imageElement.src = fallbackSrc;
-    return;
-  }
-
-  if (!placeholderSet) {
-    imageElement.dataset.placeholderSet = "true";
-    imageElement.classList.add("image-fallback");
-    imageElement.src = fallbackImageDataUri;
-  }
-};
-
-const imagesWithFallback = document.querySelectorAll("img[data-fallback-src]");
-imagesWithFallback.forEach((imageElement) => {
-  imageElement.addEventListener("error", () => applyImageFallback(imageElement));
-});
 
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightbox-image");
@@ -137,38 +117,40 @@ const lightboxClose = document.querySelector(".lightbox-close");
 const galleryItems = document.querySelectorAll(".gallery-item");
 
 const closeLightbox = () => {
-  lightbox?.classList.remove("open");
-  lightbox?.setAttribute("aria-hidden", "true");
+  if (!lightbox) {
+    return;
+  }
+
+  lightbox.classList.remove("open");
+  lightbox.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("lightbox-open");
 };
 
 galleryItems.forEach((item) => {
   item.addEventListener("click", () => {
-    const image = item.dataset.image;
-    const caption = item.dataset.caption || "";
-    const preview = item.querySelector("img");
-
-    if (!lightbox || !lightboxImage || !preview) {
+    if (!lightbox || !lightboxImage) {
       return;
     }
 
-    lightboxImage.classList.remove("image-fallback");
-    lightboxImage.dataset.fallbackTried = "false";
-    lightboxImage.dataset.placeholderSet = "false";
-    lightboxImage.dataset.fallbackSrc = preview.dataset.fallbackSrc || preview.src;
-    lightboxImage.src = image || preview.src;
-    lightboxImage.alt = preview.alt;
-    lightboxCaption.textContent = caption;
+    const image = item.dataset.image;
+    const caption = item.dataset.caption || "";
+    const previewImage = item.querySelector("img");
+
+    if (!(previewImage instanceof HTMLImageElement)) {
+      return;
+    }
+
+    lightboxImage.src = image || previewImage.src;
+    lightboxImage.alt = previewImage.alt;
+
+    if (lightboxCaption) {
+      lightboxCaption.textContent = caption;
+    }
 
     lightbox.classList.add("open");
     lightbox.setAttribute("aria-hidden", "false");
+    document.body.classList.add("lightbox-open");
   });
-});
-
-lightboxImage?.addEventListener("error", () => {
-  if (!lightboxImage) {
-    return;
-  }
-  applyImageFallback(lightboxImage);
 });
 
 lightboxClose?.addEventListener("click", closeLightbox);
