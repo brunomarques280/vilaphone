@@ -9,7 +9,7 @@ if (yearElement) {
   yearElement.textContent = String(new Date().getFullYear());
 }
 
-const closeMobileMenu = () => {
+const closeMenu = () => {
   if (!nav || !menuToggle) {
     return;
   }
@@ -27,7 +27,7 @@ if (menuToggle && nav) {
 }
 
 navLinks.forEach((link) => {
-  link.addEventListener("click", closeMobileMenu);
+  link.addEventListener("click", closeMenu);
 });
 
 document.addEventListener("click", (event) => {
@@ -44,13 +44,19 @@ document.addEventListener("click", (event) => {
   const clickedToggle = menuToggle.contains(target);
 
   if (!clickedInsideNav && !clickedToggle && nav.classList.contains("open")) {
-    closeMobileMenu();
+    closeMenu();
+  }
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeMenu();
   }
 });
 
 window.addEventListener("resize", () => {
   if (window.innerWidth >= 960) {
-    closeMobileMenu();
+    closeMenu();
   }
 });
 
@@ -59,22 +65,21 @@ const updateHeaderState = () => {
     return;
   }
 
-  header.classList.toggle("is-scrolled", window.scrollY > 10);
+  header.classList.toggle("is-scrolled", window.scrollY > 8);
 };
 
 updateHeaderState();
 window.addEventListener("scroll", updateHeaderState, { passive: true });
 
-// Adds staggered reveal animation to key cards and sections.
 const revealItemSelectors = [
   ".proof-card",
   ".service-card",
-  ".experience-card",
+  ".differential-card",
   ".gallery-item",
   ".testimonial-card",
   ".location-card",
   ".map-card",
-  ".final-cta-content"
+  ".final-cta-box"
 ];
 
 revealItemSelectors.forEach((selector) => {
@@ -109,60 +114,3 @@ if (prefersReducedMotion || typeof IntersectionObserver === "undefined") {
     revealObserver.observe(target);
   });
 }
-
-const lightbox = document.getElementById("lightbox");
-const lightboxImage = document.getElementById("lightbox-image");
-const lightboxCaption = document.getElementById("lightbox-caption");
-const lightboxClose = document.querySelector(".lightbox-close");
-const galleryItems = document.querySelectorAll(".gallery-item");
-
-const closeLightbox = () => {
-  if (!lightbox) {
-    return;
-  }
-
-  lightbox.classList.remove("open");
-  lightbox.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("lightbox-open");
-};
-
-galleryItems.forEach((item) => {
-  item.addEventListener("click", () => {
-    if (!lightbox || !lightboxImage) {
-      return;
-    }
-
-    const image = item.dataset.image;
-    const caption = item.dataset.caption || "";
-    const previewImage = item.querySelector("img");
-
-    if (!(previewImage instanceof HTMLImageElement)) {
-      return;
-    }
-
-    lightboxImage.src = image || previewImage.src;
-    lightboxImage.alt = previewImage.alt;
-
-    if (lightboxCaption) {
-      lightboxCaption.textContent = caption;
-    }
-
-    lightbox.classList.add("open");
-    lightbox.setAttribute("aria-hidden", "false");
-    document.body.classList.add("lightbox-open");
-  });
-});
-
-lightboxClose?.addEventListener("click", closeLightbox);
-
-lightbox?.addEventListener("click", (event) => {
-  if (event.target === lightbox) {
-    closeLightbox();
-  }
-});
-
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    closeLightbox();
-  }
-});
