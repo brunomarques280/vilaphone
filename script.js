@@ -1,4 +1,4 @@
-﻿const nav = document.querySelector(".site-nav");
+const nav = document.querySelector(".site-nav");
 const menuToggle = document.querySelector(".menu-toggle");
 const navLinks = document.querySelectorAll(".site-nav a");
 const header = document.querySelector(".site-header");
@@ -55,7 +55,7 @@ window.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("resize", () => {
-  if (window.innerWidth >= 960) {
+  if (window.innerWidth >= 980) {
     closeMenu();
   }
 });
@@ -65,7 +65,7 @@ const updateHeaderState = () => {
     return;
   }
 
-  header.classList.toggle("is-scrolled", window.scrollY > 8);
+  header.classList.toggle("is-scrolled", window.scrollY > 6);
 };
 
 updateHeaderState();
@@ -73,7 +73,8 @@ window.addEventListener("scroll", updateHeaderState, { passive: true });
 
 const revealItemSelectors = [
   ".proof-card",
-  ".service-card",
+  ".about-card",
+  ".product-card",
   ".differential-card",
   ".gallery-item",
   ".testimonial-card",
@@ -104,12 +105,12 @@ if (prefersReducedMotion || typeof IntersectionObserver === "undefined") {
     },
     {
       threshold: 0.14,
-      rootMargin: "0px 0px -8% 0px"
+      rootMargin: "0px 0px -10% 0px"
     }
   );
 
   revealTargets.forEach((target, index) => {
-    const delay = Math.min(index * 45, 420);
+    const delay = Math.min(index * 42, 400);
     target.style.setProperty("--reveal-delay", `${delay}ms`);
     revealObserver.observe(target);
   });
